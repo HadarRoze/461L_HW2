@@ -2,6 +2,7 @@ package com.example.tria_rozenberg_hw2;
 
 import android.app.DownloadManager;
 import android.app.FragmentTransaction;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,25 +17,91 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity  {
     // keys and addresses
     //google request format: https://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkway,+Mountain+View,+CA&key=YOUR_API_KEY
     final String googleAddress = "https://maps.googleapis.com/maps/api/geocode/json?address=";
     final String googleKey = "&key=AIzaSyCNND_DqC1ODB6J5a5K3W_IYQRWJAL9Qz4";
     final String darkSkyAddress = "https://api.darksky.net/forecast/fb4ffcd5b6e8f190449448adc636025a/";
-    //public JSONObject rspns;
 
+    public MapView mapView;
+    public GoogleMap googMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mapView = (MapView) findViewById(R.id.mapView);
+        mapView.onCreate(savedInstanceState);
+        mapView.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap googleMap) {
+                moveMap(googleMap, 30.3, -97.7);
+            }
+        });
+    }
+
+    public void moveMap(GoogleMap gMap, double lat, double lng){
+        googMap = gMap;
+        LatLng coord = new LatLng(lat,lng);
+        googMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coord, 16));
+        googMap.addMarker(new MarkerOptions().position(coord));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mapView.onDestroy();
+    }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        mapView.onResume();
+    }
+
+    @Override
+    protected void onStart(){
+        super.onStart();
+        mapView.onStart();
+    }
+
+    @Override
+    protected void onPause(){
+        super.onPause();
+        mapView.onPause();
+    }
+
+    @Override
+    protected void onStop(){
+        super.onStop();
+        mapView.onStop();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle bndl){
+        super.onSaveInstanceState(bndl);
+        mapView.onSaveInstanceState(bndl);
+    }
+
+    @Override
+    public void onLowMemory(){
+        super.onLowMemory();
+        mapView.onLowMemory();
     }
 
     // 1. Read the input address and convert it to google address
@@ -75,17 +142,18 @@ public class MainActivity extends AppCompatActivity {
     // Lorrie driving
     public void readCoords(JSONObject rspns) {
         TextView txtv = (TextView) findViewById(R.id.textView);
-        String lng = null;
-        String lat = null;
+        double lng = -97.7;
+        double lat = 30.3;
         try {
             JSONObject temp = rspns.getJSONArray("results").getJSONObject(0).getJSONObject("geometry").getJSONObject("location");
-            lng = Double.toString(temp.getDouble("lng"));
-            lat = Double.toString(temp.getDouble("lat"));
+            lng = temp.getDouble("lng");
+            lat = temp.getDouble("lat");
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        String coord = lat + "," + lng;
+        String coord = Double.toString(lat) + "," + Double.toString(lng);
         callDarkSky(coord);
+        moveMap(googMap, lat, lng);
     }
 
     public void callDarkSky(String coord) {
@@ -127,4 +195,9 @@ public class MainActivity extends AppCompatActivity {
         requestQueue.add(jsonObjectRequest);
     }
 
+    // Hadar driving
+    public void updateMap(String lat, String lng){
+
+    }
 }
+
