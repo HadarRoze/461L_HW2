@@ -32,8 +32,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity  {
+
     // keys and addresses
-    //google request format: https://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkway,+Mountain+View,+CA&key=YOUR_API_KEY
+    // google request format: https://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkway,+Mountain+View,+CA&key=YOUR_API_KEY
     final String googleAddress = "https://maps.googleapis.com/maps/api/geocode/json?address=";
     final String googleKey = "&key=AIzaSyCNND_DqC1ODB6J5a5K3W_IYQRWJAL9Qz4";
     final String darkSkyAddress = "https://api.darksky.net/forecast/fb4ffcd5b6e8f190449448adc636025a/";
@@ -45,6 +46,8 @@ public class MainActivity extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // initializing default map
         mapView = (MapView) findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(new OnMapReadyCallback() {
@@ -55,6 +58,7 @@ public class MainActivity extends AppCompatActivity  {
         });
     }
 
+    // Function to recenter map on input coordinates
     public void moveMap(GoogleMap gMap, double lat, double lng){
         googMap = gMap;
         LatLng coord = new LatLng(lat,lng);
@@ -62,6 +66,7 @@ public class MainActivity extends AppCompatActivity  {
         googMap.addMarker(new MarkerOptions().position(coord));
     }
 
+    // Required functions to implement Map
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -104,18 +109,15 @@ public class MainActivity extends AppCompatActivity  {
         mapView.onLowMemory();
     }
 
-    // 1. Read the input address and convert it to google address
-    // 2. Send that call to the google API
-    // 3. Read the coordinates and send them to darkSky API
-    // 4. Display the weather conditions (temperature, humidity, wind speed, precipitation)
-    // 5. Display on map
+
+    // Function that starts the process
     public void onSubmit(View view) {
         String address = getAddress();
-        Log.i("tag", "Passed get address");
         callGoogle(googleAddress + address + googleKey);
     }
 
-    //Hadar driving
+    // Hadar driving
+    // Get address from input and reformat for GoogleMap
     public String getAddress() {
         EditText inpt = (EditText) findViewById(R.id.editText);
         String address = inpt.getText().toString();
@@ -123,8 +125,8 @@ public class MainActivity extends AppCompatActivity  {
         return address;
     }
 
+    // Sends address to Google API
     public void callGoogle(final String address) {
-        Log.i("tag", "Got to call google");
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, address, null, new Response.Listener<JSONObject>() {
             @Override
@@ -136,14 +138,18 @@ public class MainActivity extends AppCompatActivity  {
             public void onErrorResponse(VolleyError error) {
             }
         });
-        requestQueue.add(jsonObjectRequest);
+        requestQueue.add(jsonObjectRequest); // Adds JSONRequest to queue
     }
 
     // Lorrie driving
+    // Reading the coordinates and sending to DarkSky and Google
     public void readCoords(JSONObject rspns) {
         TextView txtv = (TextView) findViewById(R.id.textView);
+
+        // default
         double lng = -97.7;
         double lat = 30.3;
+
         try {
             JSONObject temp = rspns.getJSONArray("results").getJSONObject(0).getJSONObject("geometry").getJSONObject("location");
             lng = temp.getDouble("lng");
@@ -151,33 +157,39 @@ public class MainActivity extends AppCompatActivity  {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
         String coord = Double.toString(lat) + "," + Double.toString(lng);
         callDarkSky(coord);
         moveMap(googMap, lat, lng);
     }
 
+    // Function that retrieves weather conditions from DarkSky
     public void callDarkSky(String coord) {
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, darkSkyAddress + coord, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                // (temperature, humidity, wind speed, precipitation)
+
+                // Condition: temperature, humidity, wind speed, precipitation
                 try {
                     String temp = Double.toString(response.getJSONObject("currently").getDouble("temperature"));
                     String humid = Double.toString(response.getJSONObject("currently").getDouble("humidity"));
                     String windspeed = Double.toString(response.getJSONObject("currently").getDouble("windSpeed"));
                     double precip_prob_num = response.getJSONObject("currently").getDouble("precipProbability");
                     String precip_type = null;
+
+                    // Checking if type of precipitation exists
                     if (precip_prob_num != 0) {
                         precip_type = response.getJSONObject("currently").getString("precipType");
                     }
+
                     String precip_prob = Double.toString(precip_prob_num);
                     TextView textView = (TextView) findViewById(R.id.textView);
 
                     if (precip_type == null) {
-                        textView.setText("The temperature is " + temp + "\nThe humidity is " + humid + "\nThe wind speed is " + windspeed + "\n The precipitation probability is " + precip_prob);
+                        textView.setText("The temperature is " + temp + "\nThe humidity is " + humid + "\nThe wind speed is " + windspeed + "\nThe precipitation probability is " + precip_prob);
                     } else
-                        textView.setText("The temperature is " + temp + "\nThe humidity is " + humid + "\nThe wind speed is " + windspeed + "\n The precipitation probability is " + precip_prob + "\nThe precipitation type is " + precip_type);
+                        textView.setText("The temperature is " + temp + "\nThe humidity is " + humid + "\nThe wind speed is " + windspeed + "\nThe precipitation probability is " + precip_prob + "\nThe precipitation type is " + precip_type);
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -189,15 +201,9 @@ public class MainActivity extends AppCompatActivity  {
 
             @Override
             public void onErrorResponse(VolleyError error) {
-
             }
         });
-        requestQueue.add(jsonObjectRequest);
-    }
-
-    // Hadar driving
-    public void updateMap(String lat, String lng){
-
+        requestQueue.add(jsonObjectRequest);    // Adding JSONRequest to queue
     }
 }
 

@@ -4,9 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/holo_blue_light"
     tools:context=".MainActivity">
 
-// Lorrie Driving
+    // Lorrie Driving
 
     <TextView
         android:id="@+id/textView"
@@ -14,6 +15,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
+        android:textColor="@android:color/white"
         app:layout_constraintBottom_toTopOf="@+id/mapView"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -53,7 +55,7 @@
 
     <com.google.android.gms.maps.MapView
         android:id="@+id/mapView"
-        android:layout_width="297dp"
+        android:layout_width="351dp"
         android:layout_height="352dp"
         android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
